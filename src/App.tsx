@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 
 const App: React.FC = () => {
   const [isClicked, setIsClicked] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  // Buat objek Audio di luar render agar tidak dibuat ulang
-  const audio = new Audio('/audio/birthday-song.mp3');
+  // Gunakan useRef untuk membuat objek Audio hanya sekali
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Inisialisasi audio object di luar render loop, di dalam fungsi
+  // yang hanya berjalan sekali saat komponen di-mount
+  if (audioRef.current === null) {
+    audioRef.current = new Audio('/audio/birthday-song.mp3');
+  }
 
   const handleCardClick = () => {
     if (!isClicked) {
@@ -15,15 +21,17 @@ const App: React.FC = () => {
   };
 
   const handlePlayAudio = () => {
-    if (!isPlaying) {
-      audio.play().catch(error => {
-        console.error("Audio playback failed:", error);
-      });
-      setIsPlaying(true);
-    } else {
-      audio.pause();
-      audio.currentTime = 0; // Kembalikan ke awal
-      setIsPlaying(false);
+    // Pastikan audioRef.current ada sebelum memanggil metode
+    if (audioRef.current) {
+      if (!isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Audio playback failed:", error);
+        });
+        setIsPlaying(true);
+      } else {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
     }
   };
 
